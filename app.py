@@ -1,16 +1,33 @@
+# ================================
+# 1. IMPORT LIBRARIES
+# ================================
 import streamlit as st
 import pandas as pd
 import pickle
+import os
 
-# Load model
-model = pickle.load(open("best_hypertension_model.pkl", "rb"))
 
+# ================================
+# 2. LOAD MODEL (DEPLOYMENT SAFE)
+# ================================
+model_path = os.path.join(os.path.dirname(__file__), "best_hypertension_model.pkl")
+
+with open(model_path, "rb") as f:
+    model = pickle.load(f)
+
+
+# ================================
+# 3. PAGE CONFIG
+# ================================
 st.set_page_config(page_title="Hypertension Predictor", layout="centered")
 
 st.title("🩺 Hypertension Risk Predictor")
-st.write("Fill in your health details below:")
+st.write("Fill in your health details below to check your risk level.")
 
-# --- INPUTS ---
+
+# ================================
+# 4. USER INPUTS
+# ================================
 age = st.slider("Age", 18, 100, 30)
 bmi = st.number_input("BMI", 10.0, 50.0, 22.0)
 cholesterol = st.number_input("Total Cholesterol (mg/dL)", 100, 400, 180)
@@ -23,7 +40,10 @@ alcohol = st.selectbox("Heavy Alcohol Consumption?", ["No", "Yes"])
 physical_activity = st.selectbox("Physically Active?", ["Yes", "No"])
 high_salt = st.selectbox("High Salt Diet?", ["No", "Yes"])
 
-# --- ENCODING ---
+
+# ================================
+# 5. ENCODE INPUT DATA
+# ================================
 sex = 1 if sex == "Male" else 0
 smoking = 1 if smoking == "Yes" else 0
 diabetes = 1 if diabetes == "Yes" else 0
@@ -32,7 +52,10 @@ alcohol = 1 if alcohol == "Yes" else 0
 physical_activity = 1 if physical_activity == "Yes" else 0
 high_salt = 1 if high_salt == "Yes" else 0
 
-# --- DATAFRAME ---
+
+# ================================
+# 6. CREATE INPUT DATAFRAME
+# ================================
 input_data = pd.DataFrame({
     "age": [age],
     "sex": [sex],
@@ -46,7 +69,10 @@ input_data = pd.DataFrame({
     "total_cholesterol_mg_dl": [cholesterol]
 })
 
-# --- PREDICT ---
+
+# ================================
+# 7. PREDICTION
+# ================================
 if st.button("Predict Risk"):
     prediction = model.predict(input_data)[0]
     probability = model.predict_proba(input_data)[0][1]
@@ -54,6 +80,13 @@ if st.button("Predict Risk"):
     st.subheader("Result:")
 
     if prediction == 1:
-        st.error(f"⚠️ High Risk ({probability*100:.2f}%)")
+        st.error(f"⚠️ High Risk of Hypertension ({probability*100:.2f}%)")
     else:
-        st.success(f"✅ Low Risk ({probability*100:.2f}%)")
+        st.success(f"✅ Low Risk of Hypertension ({probability*100:.2f}%)")
+
+
+# ================================
+# 8. FOOTER
+# ================================
+st.write("---")
+st.caption("⚠️ This tool is for educational purposes only and not a medical diagnosis.")
